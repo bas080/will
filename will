@@ -4,7 +4,7 @@ init(){
   local p=${@:2};
   case "$1" in
   'init')
-    create_todo $p;
+    create_will $p;
     ;;
   'find')
     find_tasks $p;
