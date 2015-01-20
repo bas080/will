@@ -2,11 +2,16 @@ Will Do
 =======
 
 Do you have the will to do your todos? Now with "will" you can easily manage
-your todo tasks using the command line.
+your todo tasks using the command line. There is both a version written in bash
+and another written in python. They both have similar functions and can be run
+independent of eachother.
+
+*Some features might differ between the two. I am considering continueing this
+project using python only*
 
 Features
 ========
-- Every directory can have a todo list
+- Every directory can have a todo list (.will directory)
 - Tasks have properties including categories, description and due-date.
 - Tasks are simple .md files that only require a certain layout.
 - List, view, edit and remove tasks quickly.
@@ -16,7 +21,7 @@ Setup
 =====
 Simply download the script and add it to one of your bin folders.
 
-*Make sure you have your EDITOR variable set this can be easily done by adding
+*Make sure you have your EDITOR variable set in environment. This can be easily done by adding
 export EDITOR=vim to your .bashrc*
 
 Usage
