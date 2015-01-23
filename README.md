@@ -143,3 +143,7 @@ Contribute
 Please leave a comment if you know of improvements or even better, send me a
 pull request. If you really like the project then consider starring or following
 it.
+
+Links
+=====
+<a href="https://github.com/bas080/will">GitHub</a>

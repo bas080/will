@@ -216,7 +216,7 @@ export_tsv(){
   #when no keyword is given it will list all
   #otherwise it shows only the tasks containing the keywords
   local out=$(mktemp);
-  echo -e "id\tsubject\tcategories\tdescription\tdeadline" >> $out;
+  echo -e "id\tsubject\tcategories\tdescription\tdeadline\n\n" >> $out;
   #echo -e "--\t-------\t----------\t-----------\t--------" >> $out;
   get_will_files $@ | while read file; do
     local sub=$(get_task_subject $file);

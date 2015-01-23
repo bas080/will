@@ -13,15 +13,11 @@ import time
 import sys
 import os
 import re
+#import argparse TODO for better argument parsing and extra features
 
 EDITOR=os.getenv('EDITOR')
 
-#import argparse TODO
-
 def main( args ):
-
-
-  #get all the necessary arguments
   try:
     opt = args[1]
   except Exception, e:
@@ -38,7 +34,7 @@ def main( args ):
 
   opt = args[1]
   if opt == 'init':
-    create_will( val );
+    sys.exit( create_will( val ) )
   elif opt == 'list' or opt == 'ls':
     list_tasks( )
   elif opt == 'rm' or opt == 'remove':
@@ -46,11 +42,22 @@ def main( args ):
   elif opt == 'edit':
     edit_task( val )
   elif opt == 'view':
-    view_task( val )
+    view_tasks( val )
+  elif opt == 'path':
+    print find_will( )
   elif opt == 'export':
     export_tasks( val )
   elif opt == 'find':
-    find_tasks( val )
+    if val:
+      tasks = find_tasks( val )
+    else:
+      tasks = get_tasks( )
+    if tasks:
+      for task in tasks:
+        print task
+      sys.exit(0)
+    else:
+      sys.exit(1)
   elif args[1][0] == args[1][0].upper():
     create_task( args[1:] )
   else:
@@ -58,10 +65,20 @@ def main( args ):
 
 def usage():
   print '''
-will Subject title has to start with capital letter
-  or
-will init|remove|find|export|edit
-'''
+    will Subject title has to start with capital letter
+      or
+    will init|remove|find|export|edit
+  '''
+  sys.exit(1)
+
+def view_tasks( keywords ):
+  for task in find_tasks( keywords ):
+    with open( task, 'r' ) as f:
+      print f.read()
+  sys.exit(0)
+
+def search_file( keywords ):
+  return ''
 
 def remove_task( tasks ):
   total = 0
@@ -78,21 +95,17 @@ def remove_task( tasks ):
   print str(total)+' tasks removed'
   sys.exit(0);
 
-def edit_task( params ):
-  task_file=str(find_will()+'/'+params[0])+".md"
-  command=EDITOR+" "+task_file
-  os.system( command )
-  sys.exit(0)
-  #subprocess.Popen( command )
-
-def find_will( ):
-  path = os.path.abspath( __file__ )
-  path = os.path.abspath( os.path.join( path, os.pardir ) )
-  while True:
-    path = os.path.abspath( os.path.join( path, os.pardir ) )
-    will = path+'/.will'
-    if os.path.isdir( will ):
-      return path+'/.will'
+def edit_task( keywords ):
+  try:
+    task = find_tasks( keywords )[0];
+    print task
+    command=EDITOR+" "+task
+    os.system( command )
+    sys.exit(0)
+  except Exception, e:
+    print "no matching file to edit"
+    sys.exit(1)
+    pass
 
 def create_will( params ):
   path=' '.join(params)
@@ -102,31 +115,54 @@ def create_will( params ):
     path = path+'/.will'
   if not os.path.exists( path ):
     os.makedirs( path )
-    print 'created .will'
-    return True
+    print path
+    return 0
   else:
-    print '.will directory already exists'
-    return False
+    return 1
 
 def create_task( params ):
-
   subject=' '.join( params )
 
-  task_file=str(find_will()+'/'+str(random.randint( 10000, 99999 )))+".md"
+  task_file=str(find_will()+'/'+str(random.randint( 1000, 9999 )))+".md"
 
   with open( task_file, 'w+' ) as f:
     f.write(subject+'\n')
     f.write( re.sub('.', '=', subject)+'\n')
     f.write( 'description of the task here\n' )
-    f.write( datetime.datetime.now().strftime('%b %d %Y') )
+    f.write( datetime.datetime.now().strftime('%d %b %Y') )
 
   command=EDITOR+" "+task_file
   os.system( command )
   #subprocess.Popen( command )
 
-def find_task( match ):
-  print 'find the task corresponding to ID or keywords'
+def find_tasks( keywords=[] ):
+  # flexibly searches for tasks that contain either the keywords in or
+  # or partially match the ID.
+  output = []
+  for task in get_tasks():
+    for keyword in keywords:
+      if keyword in task:
+        output.append( task )
+        break
+      with open( task, 'r' ) as task_file:
+        if keyword in task_file.read():
+          output.append( task )
+          break
+  return output
+
+  #if type(substr) == 'string':
+  #  return
+  #else if type(substr == 'int'):
+  #  return
   #check files for regex matches
+
+def find_will( ):
+  path = os.path.dirname( __file__ )
+  while True:
+    will = path + '/.will'
+    if os.path.isdir( will ):
+      return path+'/.will'
+    path = os.path.abspath( os.path.join( path, os.pardir ) )
 
 def get_tasks():
   tasks = [];
@@ -137,7 +173,6 @@ def get_tasks():
   for index, task in enumerate(tasks):
     tasks[index] = path+'/'+task
   return tasks;
-
 
 def list_tasks( ):
   rows = []
@@ -153,25 +188,24 @@ def list_tasks( ):
       index = index + 1
     lines = lines[0:index]
 
-    task_identif = task.split('/')[-1][0:-3] #filename without file extension
+    task_identif = get_task_id          ( task )
     task_subject = get_task_subject     ( lines )
     task_categor = get_task_categories  ( lines )
     task_descrip = get_task_description ( lines )
-    task_duratio = get_task_duration    ( lines );
+    task_duratio = get_task_duration    ( lines )
 
     #print task_identif+'\t'+task_subject+'\t'+task_categor+'\t'+task_descrip+'\t'+task_duratio
     rows.append([ task_identif, task_subject, task_categor, task_descrip, task_duratio]);
   rows.insert(0, [ 'TASK', 'SUBJECT', 'CATEGORY', 'DESCRIPTION', 'DEADLINE' ] )
-  collumnize( rows, [5, 24, 12, 32, 15] ) #including the 2 spaces after each collumn
+  collumnize( rows, [4, 24, 12, 32, 15] ) #including the 2 spaces after each collumn
   sys.exit(0);
+
+def get_task_id( file_name ):
+  return file_name.split('/')[-1][0:4]
 
 def collumnize( rows, widths ):
   def length( string, length):
-
     string_length = len ( str ( string ) )
-
-    #print str( string_length ) +' '+ str( length )
-
     if string_length >= length:
       return string[0:length]
     else:
@@ -182,7 +216,6 @@ def collumnize( rows, widths ):
         return string
       #print string_length - length
       return string + spaces( length - string_length )
-
   for row in rows:
     line = ''
     for index, field in enumerate(row):
@@ -190,7 +223,7 @@ def collumnize( rows, widths ):
     print line
 
 def get_task_duration( lines ):
-  line = lines[-2]
+  line = lines[-1]
   try:
     due_date = int( datetime.datetime.strptime( line.split('\t')[0], '%d %b %Y').strftime('%s'));
     cur_date = int( datetime.datetime.now().strftime('%s') );
@@ -225,8 +258,12 @@ def get_task_description( lines ):
     return ''
 
 def get_task_lines( task ):
+  lines = []
   with open( task, 'r' ) as task_file:
-    return task_file.read().split('\n');
+    for line in task_file.read().split('\n'):
+      if not line == '':
+        lines.append( line )
+  return lines
 
 def duration(seconds, suffixes=['y','w','d','h','m','s'], add_s=False, separator=' '):
   # the formatted time string to be returned
