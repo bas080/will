@@ -73,23 +73,26 @@ def usage():
 
 def view_tasks( keywords ):
   for task in find_tasks( keywords ):
-    with open( task, 'r' ) as f:
-      print f.read()
+    print get_task_contents( task )
   sys.exit(0)
+
+def get_task_contents( task ):
+  with open( task, 'r' ) as f:
+    return f.read()
 
 def remove_task( tasks ):
   total = 0
-  print 'o = succes; x = failed (removal)'
   for task in tasks:
     task_file=find_will()+'/'+task+'.md'
     if os.path.exists( task_file ):
+      print get_task_contents( task_file )
       os.remove ( task_file )
       total = total + 1
-      print 'o '+task_file
+      print 'removed: ' + task_file
     else:
-      print 'x '+task_file
+      print 'failed: ' + task_file
 
-  print str(total)+' tasks removed'
+  print 'total removed: ' + str(total)
   sys.exit(0);
 
 def edit_task( keywords ):
@@ -97,8 +100,7 @@ def edit_task( keywords ):
     task = find_tasks( keywords )[0];
     command=EDITOR+" "+task
     os.system( command )
-    with open( task, 'r' ) as f:
-      print f.read()
+    print get_task_contents( task )
     print 'edited: ' + task
     sys.exit(0)
   except Exception, e:
@@ -121,7 +123,6 @@ def create_will( params ):
 
 def create_task( params ):
   subject=' '.join( params )
-
   task_file=str(find_will()+'/'+str(random.randint( 1000, 9999 )))+".md"
 
   with open( task_file, 'w+' ) as f:
@@ -132,6 +133,9 @@ def create_task( params ):
 
   command=EDITOR+" "+task_file
   os.system( command )
+  print get_task_contents( task_file )
+  print 'created: ' + task_file
+  sys.exit(0)
   #subprocess.Popen( command )
 
 def find_tasks( keywords=[] ):
@@ -143,10 +147,9 @@ def find_tasks( keywords=[] ):
       if keyword in task:
         output.append( task )
         break
-      with open( task, 'r' ) as task_file:
-        if keyword in task_file.read():
-          output.append( task )
-          break
+      if keyword in get_task_contents( task ):
+        output.append( task )
+        break
   return output
 
   #if type(substr) == 'string':
@@ -258,10 +261,9 @@ def get_task_description( lines ):
 
 def get_task_lines( task ):
   lines = []
-  with open( task, 'r' ) as task_file:
-    for line in task_file.read().split('\n'):
-      if not line == '':
-        lines.append( line )
+  for line in get_task_contents( task ).split('\n'):
+    if not line == '':
+      lines.append( line )
   return lines
 
 def duration(seconds, suffixes=['y','w','d','h','m','s'], add_s=False, separator=' '):
