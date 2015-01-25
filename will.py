@@ -77,9 +77,6 @@ def view_tasks( keywords ):
       print f.read()
   sys.exit(0)
 
-def search_file( keywords ):
-  return ''
-
 def remove_task( tasks ):
   total = 0
   print 'o = succes; x = failed (removal)'
@@ -98,9 +95,11 @@ def remove_task( tasks ):
 def edit_task( keywords ):
   try:
     task = find_tasks( keywords )[0];
-    print task
     command=EDITOR+" "+task
     os.system( command )
+    with open( task, 'r' ) as f:
+      print f.read()
+    print 'edited: ' + task
     sys.exit(0)
   except Exception, e:
     print "no matching file to edit"
