@@ -21,7 +21,7 @@ def main( args ):
   try:
     opt = args[1]
     if opt[0].upper() == opt[0]:
-      create_task( opt )
+      create_task( args[1:] )
       sys.exit(0)
   except:
     opt = 'list'
@@ -153,7 +153,7 @@ def create_task( params ):
   with open( task_file, 'w+' ) as f:
     f.write(subject+'\n')
     f.write( re.sub('.', '=', subject)+'\n')
-    f.write( 'description of the task here\n' )
+    f.write( 'description\n' )
     f.write( datetime.datetime.now().strftime('%d %b %Y') )
 
   command=EDITOR+" "+task_file

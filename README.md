@@ -2,12 +2,8 @@ Will Do
 =======
 
 Do you have the will to do your todos? Now with "will" you can easily manage
-your todo tasks using the command line. There is both a version written in bash
-and another written in python. They both have similar functions and can be run
-independent of each other.
-
-*Some features might differ between the two. I am considering continuing this
-project using python only*
+your todo tasks using the command line and storing tasks in a human readable
+markdown format combined with Tabular Format.
 
 Features
 ========
@@ -15,14 +11,20 @@ Features
 - Tasks have properties including categories, description and due-date.
 - Tasks are simple .md files that only require a certain layout.
 - List, view, edit and remove tasks quickly.
-- Tasks can be exported to JSON.
+- Tasks can be exported to JSON. (WIP)
 
 Setup
 =====
-Simply download the script and add it to one of your bin folders.
 
-*Make sure you have your EDITOR variable set in environment. This can be easily done by adding
-export EDITOR=vim to your .bashrc*
+Add the following alias to your .~/bashrc
+```bash
+export EDITOR=nano
+
+alias will='python ~/path/to/will.py'
+```
+
+*You can of course use your preferred editor. You can also install will by adding
+it to a bin-like folder. The above is just an example.*
 
 Usage
 =====
@@ -101,7 +103,7 @@ show the file contents
 ```bash
 will find bug
 ```
-This returns the files of the tasks that contain css in the title and in the content.
+This returns the files of the tasks that contain CSS in the title and in the content.
 ```bash
 /home/oen/.will/18839.md
 ```
@@ -157,13 +159,15 @@ always have the === separation which at the same time defines the header.
 
 The bottom line is used to define the due date. The format for now must be 15
 feb 2015 for it to show time till and time since. In the future I might also add
-a start date.
+a start of task date. Making it also more useful for planning activities.
 
-Roadmap
+Road map
 =======
 - log the changes made to the tasks and save it in a human readable format in
   the .will folder.
-- Auto-completion functions for bash and zsh shell.
+- Auto-completion functions for bash and Zsh shell.
+- A way to easily get and set the status of the task. Statuses include:
+  Inactive Ready Assigned Terminated Expired Forwarded Finished Failed Completed
 
 Contribute
 ==========
