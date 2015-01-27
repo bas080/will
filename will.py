@@ -20,12 +20,16 @@ EDITOR=os.getenv('EDITOR')
 def main( args ):
   try:
     opt = args[1]
+    if opt[0].upper() == opt[0]:
+      create_task( opt )
+      sys.exit(0)
   except:
     opt = 'list'
   try:
     val = args[2:]
   except:
     val = []
+
   options = {
     'init'  : create_will,
     'ls'    : list_tasks,
