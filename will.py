@@ -20,60 +20,80 @@ EDITOR=os.getenv('EDITOR')
 def main( args ):
   try:
     opt = args[1]
-  except Exception, e:
-    opt = ''
-
+  except:
+    opt = 'list'
   try:
     val = args[2:]
-  except Exception, e:
+  except:
     val = []
+  options = {
+    'init'  : create_will,
+    'ls'    : list_tasks,
+    'list'  : list_tasks,
+    'rm'    : remove_task,
+    'remove': remove_task,
+    'edit'  : edit_task,
+    'view'  : view_tasks,
+    'path'  : find_path,
+    'export': export_tasks,
+    'find'  : path_tasks,
+    'help'  : usage,
+  }
+  try:
+    options[opt]( val );
+    sys.exit(0)
+  except Exception, e:
+    usage( options )
+    sys.exit(1)
+    pass
 
-  if len(args) < 2: #check if has no arguments
-    list_tasks( )
-    return '';
-
-  opt = args[1]
-  if opt == 'init':
-    sys.exit( create_will( val ) )
-  elif opt == 'list' or opt == 'ls':
-    list_tasks( )
-  elif opt == 'rm' or opt == 'remove':
-    remove_task( val )
-  elif opt == 'edit':
-    edit_task( val )
-  elif opt == 'view':
-    view_tasks( val )
-  elif opt == 'path':
-    print find_will( )
-  elif opt == 'export':
-    export_tasks( val )
-  elif opt == 'find':
-    if val:
-      tasks = find_tasks( val )
-    else:
-      tasks = get_tasks( )
-    if tasks:
-      for task in tasks:
-        print task
-      sys.exit(0)
-    else:
-      sys.exit(1)
-  elif args[1][0] == args[1][0].upper():
-    create_task( args[1:] )
-  else:
-    usage()
-
-def usage():
+def usage( options ):
+  keys = []
+  for option in options:
+    keys.append(option)
   print '''
-    will Subject title has to start with capital letter
-      or
-    will init|remove|find|export|edit
-  '''
+NAME
+	will - Create and manage user tasks using commandline by bas080@hotmail.com
+
+SYNOPSIS
+	will [ [[OPTIONS] [WORDS | TASKS] | ... ] | [TITLE] ] | ...
+
+OPTIONS
+	'''+' '.join(keys)+'''
+
+DESCRIPTION
+	Start typing the task TITLE with a capital letter to create a new task.
+	Some OPTIONS do not require the use of WORDS or TASKS. TASKS are simply
+	the name of the task's file without the .md extension.
+	New tasks are added to the .will directory that is in the nearest parent
+	folder.
+
+EXAMPLES
+	will init - create a todo list in current folder
+
+	will New task - New task with "New task" as title. Capital letter required!
+
+	will - list the tasks in a neat list
+
+FORMAT
+	folder to the specified file, and allowing the adding,removing and editing of
+	the tasks within that file. The syntax of a todo file is a combination between
+	markdown and Tabular Seperated Data (TSV).
+
+DOCUMENTATION
+	For more examples and more extensive explanation on will's functionaliaty
+	visit this website.
+	https://github.com/bas080/will#usage
+	'''
   sys.exit(1)
 
 def view_tasks( keywords ):
+  total = 0
   for task in find_tasks( keywords ):
+    print task
+    total = total + 1
     print get_task_contents( task )
+  print 'viewing: ' + str(total) + ' files'
   sys.exit(0)
 
 def get_task_contents( task ):
@@ -92,7 +112,7 @@ def remove_task( tasks ):
     else:
       print 'failed: ' + task_file
 
-  print 'total removed: ' + str(total)
+  print 'removed: ' + str(total)
   sys.exit(0);
 
 def edit_task( keywords ):
@@ -117,9 +137,10 @@ def create_will( params ):
   if not os.path.exists( path ):
     os.makedirs( path )
     print path
-    return 0
+    sys.exit(0)
   else:
-    return 1
+    print 'error: already initiated'
+    sys.exit(1)
 
 def create_task( params ):
   subject=' '.join( params )
@@ -136,35 +157,46 @@ def create_task( params ):
   print get_task_contents( task_file )
   print 'created: ' + task_file
   sys.exit(0)
-  #subprocess.Popen( command )
 
 def find_tasks( keywords=[] ):
-  # flexibly searches for tasks that contain either the keywords in or
-  # or partially match the ID.
   output = []
   for task in get_tasks():
     for keyword in keywords:
       if keyword in task:
         output.append( task )
-        break
-      if keyword in get_task_contents( task ):
+        continue
+      if keyword.lower() in get_task_contents( task ).lower():
         output.append( task )
-        break
-  return output
+  if output:
+    return output
+  else:
+    return False
 
-  #if type(substr) == 'string':
-  #  return
-  #else if type(substr == 'int'):
-  #  return
-  #check files for regex matches
+def path_tasks( keywords=[] ):
+  if keywords:
+    output =  find_tasks( keywords )
+  else:
+    output = get_tasks()
+  if output:
+    print '\n'.join( output )
+    sys.exit(0)
+  else:
+    sys.exit(1)
 
-def find_will( ):
-  path = os.path.dirname( __file__ )
+def find_path( _path ):
+  print find_will( _path )
+  sys.exit(0)
+
+def find_will( _path=False ):
+  if _path:
+    path = _path
+  else:
+    path = os.getcwd()
   while True:
     will = path + '/.will'
     if os.path.isdir( will ):
-      return path+'/.will'
-    path = os.path.abspath( os.path.join( path, os.pardir ) )
+      return will
+    path = os.path.abspath( os.path.join( path, os.pardir))
 
 def get_tasks():
   tasks = [];
@@ -176,10 +208,17 @@ def get_tasks():
     tasks[index] = path+'/'+task
   return tasks;
 
-def list_tasks( ):
+def list_tasks( keywords ):
   rows = []
-  for task in get_tasks():
-
+  if keywords:
+    exit
+    tasks = find_tasks( keywords )
+  else:
+    tasks = get_tasks()
+  if not tasks:
+    print 'error: no matching tasks found'
+    return 0
+  for task in tasks:
     lines = get_task_lines( task )
     # cleanup the lines by removing empty strings. This removes empty lines
     # after the file of empty files between title and description
@@ -291,6 +330,7 @@ def duration(seconds, suffixes=['y','w','d','h','m','s'], add_s=False, separator
       break
   return separator.join(time)
 
+def export_tasks():
+  return 0 #TODO
+
 print main ( sys.argv );
-
-

@@ -4,9 +4,9 @@ Will Do
 Do you have the will to do your todos? Now with "will" you can easily manage
 your todo tasks using the command line. There is both a version written in bash
 and another written in python. They both have similar functions and can be run
-independent of eachother.
+independent of each other.
 
-*Some features might differ between the two. I am considering continueing this
+*Some features might differ between the two. I am considering continuing this
 project using python only*
 
 Features
@@ -15,7 +15,7 @@ Features
 - Tasks have properties including categories, description and due-date.
 - Tasks are simple .md files that only require a certain layout.
 - List, view, edit and remove tasks quickly.
-- Tasks can be exported to json.
+- Tasks can be exported to JSON.
 
 Setup
 =====
@@ -26,6 +26,7 @@ export EDITOR=vim to your .bashrc*
 
 Usage
 =====
+
 This is a command line tool. The command is "will". Here are some examples on
 how to use the "will".
 
@@ -46,7 +47,7 @@ allowed.
 will Start typing my task title
 ```
 Important to know is that the .will folder that will be used is the first one
-found while looking in the current folder and then with every search itteration
+found while looking in the current folder and then with every search iteration
 going in the parent folder.
 
 Thus if there is no .will folder in the current folder but there is one in it's
@@ -55,22 +56,46 @@ parent. Then that one will be used.
 This opens your default editor with the subject in it already. See chapter named
 tasks to find out what a task file can and should contain.
 
-*Remember to start typing with a capital letter. This avoids conflicts with the
+*Remember to start typing with a capital letter. This is done to avoid conflicts with the
 options.*
 
 **list the tasks**
 ```bash
-will ls
-  #or
-will list
+will
 ```
+
 This will output the following
+
 ```bash
-id     subject                categories   description       deadline
-256    Make screencast jUnix  development  Make a screencas  19 jan 2015
-18839  Fix error #14243       bug,urgent   Irritating bug o  19 jan 2015
+TASK  SUBJECT                   CATEGORY      DESCRIPTION                       DEADLINE         
+9197  Add font icons to portof  ...           replace the folder file and chap  2w 4d 21h        
+4955  Fix dammen board generat  Bug           The board generator is doing som  done             
+7097  Learn Angular             Learn         The technologies industry uses.   Jan 21 2015      
+4562  Nationalist               Development   data/scenarios/nationalist.js:    3w 2d 21h        
+6439  Learn Git better          Learn         Make aliases from learned comman  3w 3d 21h        
+2986  Will todo manager         Development   Keep the readme up to date with   -2d 2h           
+4839  Dammen                    Development   - Ability to add a game. States   21h              
 ```
-This example contains two tasks that are listed.
+
+You can also list tasks that contain either the ID or certain keywords. It
+searches case insensitively.
+
+```bash
+will ls dev
+  #or
+will list dev
+
+TASK  SUBJECT                   CATEGORY      DESCRIPTION                       DEADLINE         
+4562  Nationalist               Development   data/scenarios/nationalist.js:    3w 2d 21h        
+2986  Will todo manager         Development   Keep the readme up to date with   -2d 2h           
+4839  Dammen                    Development   - Ability to add a game. States   21h              
+```
+
+**view tasks**
+```bash
+will view 3826
+```
+show the file contents
 
 **find tasks**
 ```bash
@@ -78,14 +103,14 @@ will find bug
 ```
 This returns the files of the tasks that contain css in the title and in the content.
 ```bash
-/home/boi/.will/18839.md
+/home/oen/.will/18839.md
 ```
 
 **edit a task**
 ```bash
 will edit 1843
   #or
-will edit refactor code project alpha
+will edit re-factor code
 ```
 Opens up the task with corresponding ID or the task that matches the keywords
 the most in your favorite EDITOR. 
@@ -97,26 +122,26 @@ will rm 8372 3729 6234
 will remove 5819
 ```
 You cannot remove using keywords. This is done to avoid accidental removals.
-Remeber that when removing a task it is gone for good. In case you want to set
+Remember that when removing a task it is gone for good. In case you want to set
 the status of a task to completed or something similar, consider using categories instead to
 set the category of a task to completed or done. That way you do not loose
 valuable information regarding the tasks.
 
 **export the tasks**
+*not yet implemented*
 ```bash
 will export
 ```
 *An example of the output looks like this.*
 ```bash
-TODO
 ```
 
 Tasks
 =====
 A task file format is dead simple here it goes.
 ```markdown
-Title	category_one	category_two
-===
+Title	category_one	category_two	category...
+=====
 This is a description
 - That include markdown style bullets
 - And it describes clearly what the
@@ -128,15 +153,17 @@ and the categories. To define a category you have to use tabs and it has to be
 on the first line.
 
 The description should always start on the third line. The second line should
-always have the === seperation which at the same time defines the header.
+always have the === separation which at the same time defines the header.
 
-The bottom line is used to define the deu date. In the future I might also add a
-start and or creation date. They will also be spaced using tabs.
+The bottom line is used to define the due date. The format for now must be 15
+feb 2015 for it to show time till and time since. In the future I might also add
+a start date.
 
 Roadmap
 =======
-- Add dates of category changes to the bottom of the file this way you know when
-  the state of a "ticket has changed.
+- log the changes made to the tasks and save it in a human readable format in
+  the .will folder.
+- Auto-completion functions for bash and zsh shell.
 
 Contribute
 ==========
