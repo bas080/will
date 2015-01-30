@@ -39,6 +39,7 @@ def main( args ):
     'edit'  : edit_task,
     'view'  : view_tasks,
     'path'  : find_path,
+    'paths' : find_paths,
     'export': export_tasks,
     'find'  : path_tasks,
     'help'  : usage,
@@ -190,6 +191,14 @@ def path_tasks( keywords=[] ):
 def find_path( _path ):
   print find_will( _path )
   sys.exit(0)
+
+def find_paths( args ):
+  path = os.getcwd()
+  for root, dirs, files in os.walk(path):
+    for d in dirs:
+      if d == '.will':
+        print(os.path.join(root, d))
+  return 0
 
 def find_will( _path=False ):
   if _path:
