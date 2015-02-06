@@ -6,6 +6,7 @@ Version   0.1
 Author    bas080
 """
 
+import termcolor
 import datetime
 import random
 import string
@@ -23,7 +24,7 @@ def main( args ):
     if opt[0].upper() == opt[0]:
       create_task( args[1:] )
       sys.exit(0)
-  except:
+  except Exception, e:
     opt = 'list'
   try:
     val = args[2:]
@@ -94,39 +95,50 @@ DOCUMENTATION
 
 def view_tasks( keywords ):
   total = 0
-  for task in find_tasks( keywords ):
-    print task
-    total = total + 1
-    print get_task_contents( task )
-  print 'viewing: ' + str(total) + ' files'
+  if keywords:
+    tasks = find_tasks( keywords )
+  else:
+    tasks = get_tasks()
+  termcolor.cprint( 'viewing: ' + str( len(tasks) ) + ' task(s)' + '\n', color='red', attrs=['bold'] )
+  for task in tasks:
+    view_task( task )
+  termcolor.cprint( find_will(), color='red', attrs=['bold'] )
   sys.exit(0)
+
+def view_task( task ):
+  lines = get_task_lines( task )
+  termcolor.cprint( lines[0], color='cyan', attrs=['bold'] )
+  termcolor.cprint( '\n'.join( lines[2:-1] ), color='white' )
+  termcolor.cprint( lines[-1]+'\n', color='yellow', attrs=['bold'] )
 
 def get_task_contents( task ):
   with open( task, 'r' ) as f:
     return f.read()
 
 def remove_task( tasks ):
-  total = 0
+  termcolor.cprint( 'removing: ' + str( len(tasks)) + '\n', color='red', attrs=['bold'] )
   for task in tasks:
-    task_file=find_will()+'/'+task+'.md'
+    task_file = find_will() + '/' + task + '.md'
     if os.path.exists( task_file ):
-      print get_task_contents( task_file )
+      view_task( task_file )
       os.remove ( task_file )
-      total = total + 1
-      print 'removed: ' + task_file
     else:
-      print 'failed: ' + task_file
+      termcolor.cprint( 'failed: '+task_file, color='yellow', attrs=['bold'] )
 
-  print 'removed: ' + str(total)
   sys.exit(0);
+
+def edit_file( task ):
+  command=EDITOR+" "+task
+  os.system( command )
+  termcolor.cprint( 'edited: ' + task + '\n', color='red', attrs=['bold'] )
+  view_task( task )
+  sys.exit(0)
 
 def edit_task( keywords ):
   try:
     task = find_tasks( keywords )[0];
-    command=EDITOR+" "+task
-    os.system( command )
-    print get_task_contents( task )
-    print 'edited: ' + task
+    edit_file( task )
+    view_task( task )
     sys.exit(0)
   except Exception, e:
     print "no matching file to edit"
@@ -149,17 +161,17 @@ def create_will( params ):
 
 def create_task( params ):
   subject=' '.join( params )
-  task_file=str(find_will()+'/'+str(random.randint( 1000, 9999 )))+".md"
-
+  task = str( random.randint( 1000, 9999 ) )
+  task_file=str(find_will()+'/'+task)+".md"
   with open( task_file, 'w+' ) as f:
     f.write(subject+'\n')
     f.write( re.sub('.', '=', subject)+'\n')
     f.write( 'description\n' )
     f.write( datetime.datetime.now().strftime('%d %b %Y') )
-
-  command=EDITOR+" "+task_file
-  os.system( command )
-  print get_task_contents( task_file )
+  print task_file
+  print task
+  edit_file( task_file )
+  view_task( task_file )
   print 'created: ' + task_file
   sys.exit(0)
 
@@ -250,8 +262,9 @@ def list_tasks( keywords ):
 
     #print task_identif+'\t'+task_subject+'\t'+task_categor+'\t'+task_descrip+'\t'+task_duratio
     rows.append([ task_identif, task_subject, task_categor, task_descrip, task_duratio]);
-  rows.insert(0, [ 'TASK', 'SUBJECT', 'CATEGORY', 'DESCRIPTION', 'DEADLINE' ] )
+  rows.insert(0, [ 'task', 'subject', 'category', 'description', 'deadline' ] )
   collumnize( rows, [4, 24, 12, 32, 15] ) #including the 2 spaces after each collumn
+  termcolor.cprint( '\n'+find_will(), color='red', attrs=['bold'] )
   sys.exit(0);
 
 def get_task_id( file_name ):
@@ -270,11 +283,20 @@ def collumnize( rows, widths ):
         return string
       #print string_length - length
       return string + spaces( length - string_length )
-  for row in rows:
+  for i, row in enumerate(rows):
     line = ''
     for index, field in enumerate(row):
       line = line + length( field, widths[index] ) + '  '
-    print line
+    if ( i == 0 ):
+      termcolor.cprint( line, color='cyan', attrs=['bold'] )
+    else:
+      print line
+
+def get_task_title( lines ):
+  return lines[0].split('\t')[0]
+
+def get_task_date( lines ):
+  return lines[-1]
 
 def get_task_duration( lines ):
   line = lines[-1]
