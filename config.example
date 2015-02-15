@@ -1,0 +1,18 @@
+[configurations]
+tags = author bas080, project will
+view_template = {title} {id}\n{description}\n\n{status}\t{tags}
+
+[examples]
+# This section is not active. Changes made here do not apply. You can copy and
+# paste the examples in this section to the configurations section
+
+#template used when creating a new file
+file_template = {title}\n{tags}\n{description}\n{status}
+
+#when using the view option
+
+# templates concerning the printing to terminal. These are all related to the
+# status command
+status_template_statusses = In directory {path}\n  (use "will set <status> <task...>" to change task(s) as status)\n{statusses}
+status_template_status    = \n{status}: {amount}\n{tasks}\n
+status_template_task      = \n\t{id}  {title}

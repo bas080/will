@@ -1,0 +1,21 @@
+Make a new task using user input
+feature
+
+Make creating new tasks not require the vim editor. This is an addition to the
+manual editing of the task file.
+
+$ will create
+
+name: Remove files
+
+categories: cleanup
+
+description: Too many files in the directory
+
+1 ) unassigned
+2 ) assigned
+...
+
+status: 1
+
+Finished

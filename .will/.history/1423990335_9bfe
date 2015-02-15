@@ -1,0 +1,6 @@
+Option rm should allow the removal of multiple tasks
+quick
+author bas080
+project will
+ Currently only works when removing a single task if multiple tasks are defined it does not remove them
+Ready

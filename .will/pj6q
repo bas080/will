@@ -1,0 +1,11 @@
+Configure the expire time
+author bas080
+project will
+
+A way to set the expiration time. A good key name would be.
+
+expiration_time
+
+The time will be expressed in seconds
+
+Ready

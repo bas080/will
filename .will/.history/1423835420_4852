@@ -1,0 +1,24 @@
+Cleanup the code
+feature
+
+
+Reconsidered this again and have implemented the Will class. This contains all
+functions concerning the editing of tasks within a .will folder.
+
+Classes and such would be overkill. I have reconsidered it and I will keep the
+code flatish.
+
+Important is to reconsider what functions belong to the core and what are
+helpers.
+
+---
+
+The code is losing it's simplicity. It needs a task class and a class to convert the
+task files to a class instance.
+
+class Task: (instantiated for every class)
+class TaskParser: (static)
+
+This allows for a smarter and more complex commandline tool in the future.
+
+Completed

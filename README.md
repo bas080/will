@@ -8,41 +8,31 @@ markdown format combined with Tabular Format.
 Features
 ========
 - Every directory can have a todo list (.will directory)
-- Tasks have properties including categories, description and due-date.
-- Tasks are simple .md files that only require a certain layout.
-- List, view, edit and remove tasks quickly.
-- Tasks can be exported to JSON. (WIP)
+- Tasks have properties including title, tags, description and status
+- Tasks are simple text files that require a certain layout.
+- Quickly add, change status and cleanup your tasks.
 
 Setup
 =====
-
 Add the following alias to your .~/bashrc
 ```bash
 export EDITOR=nano
-
 alias will='python ~/path/to/will.py'
 ```
-
-*You can of course use your preferred editor. You can also install will by adding
-it to a bin-like folder. The above is just an example.*
+You need to define a default editor and you can use whatever alias you like.  
+If you do not use "will" as alias and you are using the autocompletion function.
+Then please do not forget to change the "_will" function to the alias you are
+using. "_<your_preffered_command_name>"
 
 Usage
 =====
-
 This is a command line tool. The command is "will". Here are some examples on
 how to use the "will".
 
-**create a todo list in current directory**
+**create a todo list(.will directory) in current directory**
 ```bash
 will init
 ```
-Creates a .will folder in the current directory. Another option would be to
-give a path.
-```bash
-will init ~/development
-```
-It will now create a file in the development folder. Absolute paths are also
-allowed.
 
 **create a new task**
 ```bash
@@ -161,13 +151,38 @@ The bottom line is used to define the due date. The format for now must be 15
 feb 2015 for it to show time till and time since. In the future I might also add
 a start of task date. Making it also more useful for planning activities.
 
+Configure
+=========
+The "config" file can be found in every .will directory. So what can be
+configured? If not the config of the parent .will is used.
+
+## template
+Maybe you would preffer to make changes to the way data is represented
+during viewing of tasks or logs. The following keywords are assigned for this
+feature. If not defined they revert to the default.
+
+
+```rc
+statusses_template = In directory {path}\n  (use "will set <status> <task...>" to change task(s) as status)\n{statusses}
+status_template = Color.bold + '\n{status}: {amount}\n{tasks}\n' + Color.end
+task_template = Color.end + Color.red + '\n\t{id}\t' + Color.end + '{title}'
+```
+
+## tags
+You are also able to add default tags to a task. This might be handy for adding
+author name or project name. Anything really. The tags are comma seperated.
+
+```rc
+tags = author bas080, project will, management tool
+```
+
 Road map
-=======
-- log the changes made to the tasks and save it in a human readable format in
-  the .will folder.
+========
 - Auto-completion functions for bash and Zsh shell.
-- A way to easily get and set the status of the task. Statuses include:
-  Inactive Ready Assigned Terminated Expired Forwarded Finished Failed Completed
+- Revive tasks that where "cleaned" from the list.
+- Tasks can be exported to JSON. (WIP)
+- Logs all user actions so you can see what happened.
+
 
 Contribute
 ==========

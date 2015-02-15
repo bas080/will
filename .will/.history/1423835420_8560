@@ -1,0 +1,5 @@
+Split categories using whitespace and not just tabs or spaces
+bug
+
+The output of the list suggests that the categories list is not split correctly.
+Completed

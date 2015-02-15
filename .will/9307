@@ -1,0 +1,16 @@
+Add mv option to move one list to another
+feature
+feature
+
+
+Meant to move tasks from one list to another.
+
+Requires either the ID's of the tasks or words that are contained in the tasks.
+
+e.g:
+will mv vines mod ~/development/vines
+
+options:
+will mv [ WORDS | ID ]| [ PATH ]
+
+Ready

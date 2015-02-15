@@ -1,0 +1,21 @@
+_will(){
+  local cur=${COMP_WORDS[COMP_CWORD]}
+  local pre=${COMP_WORDS[COMP_CWORD-1]}
+  local opt=${COMP_WORDS[1]}
+  local count=$COMP_CWORD
+
+  if [ $count -eq 1 ]; then
+    local options=$( will ac options )
+  elif [ $count -gt 1 ]; then
+    local options=$( will ac "$opt" )
+  fi
+
+  if [[ ${opt:0:1} == '/' ]] && [ $count -eq 1 ]; then
+    local options=$( find $PWD -name '.will' -type d 2> /dev/null )
+  fi
+
+  COMPREPLY=( $( compgen -W "$options" -- $cur ))
+}
+
+complete -F _will will
+

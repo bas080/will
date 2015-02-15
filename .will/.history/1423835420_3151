@@ -1,0 +1,8 @@
+Check if task file does not exist before creating it
+Bug
+
+
+When moving or adding new tasks it should first check if the task id is not
+already present in that list.
+
+Completed

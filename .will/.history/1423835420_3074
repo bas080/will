@@ -1,0 +1,29 @@
+Add statusses get and set
+feature
+
+
+A way to easily get and set the status of the task. Statusses include:
+
+Inactive Ready Assigned Terminated Expired Forwarded Finished Failed Completed
+
+The changes in status are logged in the bottom of the file. The lines start with
+a '- ' example of the log is.
+
+- inactive
+22 feb 2015
+
+When creating a task the default initial status is inactive. This can be changed
+here to clearly state what the status was at creation. To change the status one
+can edit the file manually, or use the command.
+
+```bash
+will status [TASK|ID]
+```
+
+This brings up a list dialog where the user can select to what state the task
+should be changed to. It then appends the state change to the task file with the
+current date.
+
+27 Jan 2015
+
+Completed

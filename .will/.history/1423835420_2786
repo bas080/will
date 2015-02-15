@@ -1,0 +1,16 @@
+# Better Task file layout
+feature
+
+The words directly connected to the title are the categories or even better
+"tags". Tags can only be one word on every line.
+
+Notice the white line between the tags and the description. This is necessary
+for easier reading. Not necessary for interpretting the data correctly.
+
+The order of the bottom lines is not strict. It uses the word at the beginning
+of the line to determine what the type of the data is.
+
+The deu date format is time since epoch. This is converted when displaying in
+list or view. Making it human readable.
+
+Completed

@@ -1,0 +1,33 @@
+Log the user actions
+feature
+logging
+
+Actions that will be logged are changes made during editing the file, removal of
+tasks and creation of tasks. Every change creates a carbon copy of the file in
+the history folder. This is important for reverting tasks.
+
+---
+
+No longer saving task log in the task file. This should stay a simple human
+readable file. The reason being that file changes can be derived by looking at
+the log file.
+
+---
+
+Except for saving the changes to the task in the task file, the actions that the
+player performs are saved to a log file. This way file changes can be reverted
+more easily. Only changes to files are logged. Viewing and listing is not
+logged.
+
+To allow reverting the following data is necessary.
+
+The id of the backup file and the id of the task that was changed. A status,
+priority, description, deu or title change are all considered as normal file
+changes. No distinction is made between the changes. To make reverting easier
+the changes also have a title/description. A log entry looks as follows.
+
+TASKID
+BACKUPID
+DESCRIPTION
+
+Ready

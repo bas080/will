@@ -1,0 +1,11 @@
+Priority
+feature
+
+will priority [ID] 100
+
+The higher the number the higher the priority. The number can be as high as you
+want.
+
+Once priority is set for multiple tasks, the tasks can be sorted by priority.
+
+Completed

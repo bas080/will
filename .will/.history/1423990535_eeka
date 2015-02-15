@@ -1,0 +1,9 @@
+Improve the quick add usecase
+author bas080
+project will
+
+The quick option is ugly. Allow user to determine if Capital letter start is
+either a quick add or a edit add command. Also thing more about how quick add
+should work when it comes to the command
+
+Ready

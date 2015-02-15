@@ -1,0 +1,14 @@
+Save changed tasks temporarily in a backup folder
+
+
+Whenever changes are made to the task it is saved to a backup file with a unique
+ID. This id is used in the file log. The id is a combination of unix time since
+epoch followed by two numbers. e.g.
+
+1923190_53
+
+Backups are stored indefinately. The backups can be cleaned up manually. They
+are exact copies of the file. Thus it can easily be read and brought back from
+the grave.
+
+Completed

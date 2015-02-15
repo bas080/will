@@ -1,0 +1,16 @@
+Interdependent tasks
+
+Ability to link tasks to eachother thus allowing to make task trees. Allowing to
+define that one task must first be completed before another one can be started.
+
+Let's say that there are two tasks
+
+- Do user testing
+- Create interaction
+
+Before user testing can be done we need the interaction to be created first. How
+to do?
+
+will depend [ID] [IDs]
+
+Ready

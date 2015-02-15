@@ -1,0 +1,8 @@
+# Quick add
+feature
+
+Do not require to edit the task when added. Usage looks like:
+
+will -q Destroy the world
+Completed
+Completed

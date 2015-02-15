@@ -1,371 +1,606 @@
 #!/usr/bin/env python
-"""
-Brief     Easily manage your tasks with the commandline
-Created   Jan 20 2015
-Version   0.1
-Author    bas080
-"""
+# needed to simplify remove features that are cluttery
 
-import termcolor
-import datetime
-import random
-import string
-import time
 import sys
+import shutil
 import os
-import re
-#import argparse TODO for better argument parsing and extra features
+import random
+import time
+import string
+import filecmp
+import time
+import pprint
+from ConfigParser import SafeConfigParser
 
 EDITOR=os.getenv('EDITOR')
 
-def main( args ):
-  try:
-    opt = args[1]
-    if opt[0].upper() == opt[0]:
-      create_task( args[1:] )
-      sys.exit(0)
-  except Exception, e:
-    opt = 'list'
-  try:
-    val = args[2:]
-  except:
-    val = []
+def is_valid_dir( path ):
+  return os.path.isdir( path )
 
-  options = {
-    'init'  : create_will,
-    'ls'    : list_tasks,
-    'list'  : list_tasks,
-    'rm'    : remove_task,
-    'remove': remove_task,
-    'edit'  : edit_task,
-    'view'  : view_tasks,
-    'path'  : find_path,
-    'paths' : find_paths,
-    'export': export_tasks,
-    'find'  : path_tasks,
-    'help'  : usage,
-  }
-  try:
-    options[opt]( val );
-    sys.exit(0)
-  except Exception, e:
-    usage( options )
-    sys.exit(1)
-    pass
+class Color:
+   purple = '\033[95m'
+   cyan = '\033[96m'
+   darkcyan = '\033[36m'
+   blue = '\033[94m'
+   green = '\033[92m'
+   yellow = '\033[93m'
+   red = '\033[91m'
+   bold = '\033[1m'
+   underline = '\033[4m'
+   end = '\033[0m'
 
-def usage( options ):
-  keys = []
-  for option in options:
-    keys.append(option)
-  print '''
-NAME
-	will - Create and manage user tasks using commandline by bas080@hotmail.com
+class Will:
+  # a task is basicly the file name of the task. Not the path. To get the path
+  # of a task you would have to use get_task_path
 
-SYNOPSIS
-	will [ [[OPTIONS] [WORDS | TASKS] | ... ] | [TITLE] ] | ...
+  def __init__( self, path = '' ):
+    # check if first arg is an option if not then check if  directory if not
+    # then if neither then show usage.
+    # # #
+    self.path = self.find_will_path( path )
+    self.statusses = [ 'Inactive', 'Ready', 'Assigned', 'Terminated', 'Expired', 'Forwarded', 'Finished', 'Failed', 'Completed', 'Revived' ]
 
-OPTIONS
-	'''+' '.join(keys)+'''
+  def get_config( self, key, default ):
+    try:
+      self.configurations = self.configurations
+    except Exception, e:
+      self.configurations = SafeConfigParser()
+      self.configurations.read(self.path+'/.config/config')
+      pass
+    try:
+      return self.configurations.get( 'configurations', key ).replace( '\\n', '\n' ).replace( '\\t', '\t' )
+    except Exception, e:
+      return default
 
-DESCRIPTION
-	Start typing the task TITLE with a capital letter to create a new task.
-	Some OPTIONS do not require the use of WORDS or TASKS. TASKS are simply
-	the name of the task's file without the .md extension.
-	New tasks are added to the .will directory that is in the nearest parent
-	folder.
-
-EXAMPLES
-	will init - create a todo list in current folder
-
-	will New task - New task with "New task" as title. Capital letter required!
-
-	will - list the tasks in a neat list
-
-FORMAT
-	folder to the specified file, and allowing the adding,removing and editing of
-	the tasks within that file. The syntax of a todo file is a combination between
-	markdown and Tabular Seperated Data (TSV).
-
-DOCUMENTATION
-	For more examples and more extensive explanation on will's functionaliaty
-	visit this website.
-	https://github.com/bas080/will#usage
-	'''
-  sys.exit(1)
-
-def view_tasks( keywords ):
-  total = 0
-  if keywords:
-    tasks = find_tasks( keywords )
-  else:
-    tasks = get_tasks()
-  termcolor.cprint( 'viewing: ' + str( len(tasks) ) + ' task(s)' + '\n', color='red', attrs=['bold'] )
-  for task in tasks:
-    view_task( task )
-  termcolor.cprint( find_will(), color='red', attrs=['bold'] )
-  sys.exit(0)
-
-def view_task( task ):
-  lines = get_task_lines( task )
-  termcolor.cprint( lines[0], color='cyan', attrs=['bold'] )
-  termcolor.cprint( '\n'.join( lines[2:-1] ), color='white' )
-  termcolor.cprint( lines[-1]+'\n', color='yellow', attrs=['bold'] )
-
-def get_task_contents( task ):
-  with open( task, 'r' ) as f:
-    return f.read()
-
-def remove_task( tasks ):
-  termcolor.cprint( 'removing: ' + str( len(tasks)) + '\n', color='red', attrs=['bold'] )
-  for task in tasks:
-    task_file = find_will() + '/' + task + '.md'
-    if os.path.exists( task_file ):
-      view_task( task_file )
-      os.remove ( task_file )
-    else:
-      termcolor.cprint( 'failed: '+task_file, color='yellow', attrs=['bold'] )
-
-  sys.exit(0);
-
-def edit_file( task ):
-  command=EDITOR+" "+task
-  os.system( command )
-  termcolor.cprint( 'edited: ' + task + '\n', color='red', attrs=['bold'] )
-  view_task( task )
-  sys.exit(0)
-
-def edit_task( keywords ):
-  try:
-    task = find_tasks( keywords )[0];
-    edit_file( task )
-    view_task( task )
-    sys.exit(0)
-  except Exception, e:
-    print "no matching file to edit"
-    sys.exit(1)
-    pass
-
-def create_will( params ):
-  path=' '.join(params)
-  if path == '':
-    path = os.getcwd()+'/.will'
-  else:
-    path = path+'/.will'
-  if not os.path.exists( path ):
+  def create_config( self, path ):
     os.makedirs( path )
-    print path
-    sys.exit(0)
-  else:
-    print 'error: already initiated'
-    sys.exit(1)
+    conf_path = path + 'config'
+    with open( conf_path, 'w+' ) as f:
+      f.write( '[configurations]' )
 
-def create_task( params ):
-  subject=' '.join( params )
-  task = str( random.randint( 1000, 9999 ) )
-  task_file=str(find_will()+'/'+task)+".md"
-  with open( task_file, 'w+' ) as f:
-    f.write(subject+'\n')
-    f.write( re.sub('.', '=', subject)+'\n')
-    f.write( 'description\n' )
-    f.write( datetime.datetime.now().strftime('%d %b %Y') )
-  print task_file
-  print task
-  edit_file( task_file )
-  view_task( task_file )
-  print 'created: ' + task_file
-  sys.exit(0)
+  def config( self, args ):
+    conf_dir = self.path + '/config/'
+    conf_path = conf_dir+'config'
+    if not os.path.exists( conf_path ):
+      self.create_config( conf_dir )
+    command = EDITOR+" "+conf_path
+    os.system( command )
 
-def find_tasks( keywords=[] ):
-  output = []
-  for task in get_tasks():
-    for keyword in keywords:
-      if keyword in task:
-        output.append( task )
-        continue
-      if keyword.lower() in get_task_contents( task ).lower():
-        output.append( task )
-  if output:
+  def __getitem__( self, option ):
+    self.options = {
+      'ac'          : self.autocomplete,
+      'assign'      : self.assign,
+      'clean'       : self.clean,
+      'complete'    : self.complete,
+      'config'      : self.config,
+      'create'      : self.create,
+      'edit'        : self.edit,
+      'grep'        : self.grep,
+      'history'     : self.history,
+      'init'        : self.init,
+      'ls'          : self.ls,
+      'path'        : self.get_path,
+      'quick'       : self.quick_create,
+      'ready'       : self.ready,
+      'revive'      : self.revive,
+      'rm'          : self.rm,
+      'set'         : self.set_status,
+      'status'      : self.status,
+      'tag'         : self.tag,
+      'view'        : self.view,
+    }
+    if option in self.options.keys():
+      return self.options[option]
+    else:
+      return self.usage
+
+  def autocomplete( self, option ):
+    option = option[0]
+    options = {
+      'complete'   : self._complete,
+      'edit'       : self._edit,
+      'assign'     : self._assign,
+      'options'    : self._options,
+      'ready'      : self._ready,
+      'revive'     : self._revive,
+      'set'        : self._statusses,
+      'rm'         : self._rm,
+      'statusses'  : self._statusses,
+      'tasks'      : self._tasks,
+    }
+
+    if option in options.keys():
+      print ' '.join( options[ option ]( args ) )
+
+  def _assign( self, args ):
+    return self.get_tasks_with_status( [ 'Ready' ] )
+
+  def _edit( self, args ):
+    return self.get_tasks()
+
+  def _rm( self, args ):
+    return self.get_tasks()
+
+  def ready( self, args ):
+    for task in args:
+      self.set_task_status( task, "Ready" )
+
+  def _ready( self, args ):
+    return self.get_tasks_with_status( ['Inactive', 'Assigned' ] )
+
+  def complete( self, args ):
+    for task in args:
+      self.set_task_status( task, "Completed" )
+
+  def _complete( self, args ):
+    return self.get_tasks_with_status( [ 'Inactive', 'Terminated', 'Expired', 'Forwarded', 'Finished', 'Failed' ] )
+
+  def revive( self, args ):
+    # shows the recently completed tasks
+    for task in args:
+      self.set_task_status( task, 'Inactive' )
+
+  def _revive( self, args ):
+     return self.get_tasks_with_status( ['Completed'] )
+
+  def assign( self, args ):
+    for task in args[0:-1]:
+      self.set_task_status( task, "Assigned" )
+
+  def _statusses( self, args ):
+    return self.statusses
+
+  def set_status( self, args ):
+    status = args [0]
+    if not self.is_status( status ):
+      # TODO return an error
+      print( 'not valid status: '+status)
+      return False
+    tasks = args[1:]
+    for task in tasks:
+      self.set_task_status( task, status )
+
+  def rm( self, args ):
+    tasks = args
+    for task in tasks:
+      self.remove_task( task )
+      return
+
+  def remove_task( self, task ):
+    task_path = self.get_task_path( task )
+    if self.task_exists( task ):
+      self.backup_task( task )
+      os.remove ( task_path )
+      print 'removed ' + task
+      return True
+    else:
+      return False
+
+  def _options( self, args ):
+    return self.options.keys()
+
+  def _tasks( self, args ):
+    return self.get_tasks()
+
+  def tag( self, args ):
+    tasks = args[1:]
+    tag = args[0]
+    for task in tasks:
+      if self.tag_task( task, tag ):
+        print 'tagged '+ task + ' with ' + tag
+      else:
+        sys.stderr.write('unable to tag ' + task + ' as ' + tag + '\n' )
+
+  def get_path(self, args ):
+    print self.path
+
+  def quick_create( self, args ):
+    string = ' '.join( args )
+    split = string.split('.')
+    title = split[0]
+    if len( split ) > 1:
+      description = split[1]
+    else:
+      description = ''
+    task_dict = {
+      'title'       : title,
+      'tags'        : ['quick'],
+      'description' : description,
+      'status'      : 'Inactive'
+    }
+    task = self.create_task( task_dict )
+    self.view_task( task )
+
+  def tag_task( self, task, tag ):
+    try:
+      lines = self.get_task_lines( task )
+      lines.insert( 1, tag )
+      contents = '\n'.join(lines)
+      if self.task_exists( task ):
+        self.write_task_to_file( task,  contents )
+        return True
+      return False
+    except Exception, e:
+      return False
+
+  def status( self, args ):
+    if len( args ) > 0:
+      self.view_statusses( args )
+    else:
+      self.view_statusses( self.statusses )
+
+  def set_task_status( self, task, status ):
+    lines = self.get_task_lines( task )
+    lines[-1] = status
+    content = '\n'.join( lines )
+    if self.write_task_to_file( task, content ):
+      self.log( status + ' ' + task )
+      return True
+    else:
+      return False
+
+  def log( self, string ):
+    #todo write to history log
+    print string
+
+  def is_status( self, status ):
+    if status in self.statusses:
+      return True
+    else:
+      return False
+
+  def parse_tasks( self, tasks ):
+    output = []
+    for task in tasks:
+      output.append( self.parse_task( task ) )
     return output
-  else:
-    return False
 
-def path_tasks( keywords=[] ):
-  if keywords:
-    output =  find_tasks( keywords )
-  else:
-    output = get_tasks()
-  if output:
-    print '\n'.join( output )
+  def view_statusses( self, statusses ):
+    statusses_template = 'In directory {path}\n  (use "will set <status> <task...>" to change task(s) as status)\n{statusses}'
+    statusses_template = self.get_config( 'template_statusses', statusses_template )
+    status_template = Color.bold + '\n  {status}: {amount}\n{tasks}\n' + Color.end
+    status_template = self.get_config( 'template_status', status_template )
+    task_template = Color.end + Color.red + '\n\t{id}\t' + Color.end + '{title}'
+    task_template = self.get_config( 'template_task', task_template )
+
+    statusses_string = ''
+    for status in statusses:
+      tasks = self.get_tasks_with_status( status )
+      tasks_string = ''
+      if not tasks:
+        continue
+      task_dicts = self.parse_tasks( tasks )
+      for task in tasks:
+        task_dict = self.parse_task( task )
+        tasks_string = tasks_string + task_template.format( **task_dict )
+      statusses_string = statusses_string + status_template.format(**{
+        'amount' : len(tasks),
+        'status' : status,
+        'tasks'  : tasks_string
+      })
+    print statusses_template.format(**{
+      'statusses' : statusses_string,
+      'path'      : self.path,
+    })
+    return True
+    #use a template better TODO
+    template = '''In directory {path}\nIncompleted tasks:\n  (use "will set <status> <task...>" to mark task as done)\n'''
+    tasks_done = []
+    status_dict = { 'path' : self.path, }
+    total = 1
+    for index, task in enumerate( self.get_tasks() ):
+      total = index
+      task_dict = self.parse_task( task )
+      if task_dict['status'] == 'Completed':
+        tasks_done.append( task_dict )
+        continue
+      template = template+ '\n\t'+Color.red + task + Color.end + '\t' + task_dict['status'] + '\t' + ' ' + Color.bold + task_dict['title'] + Color.end
+    template = template + '\n\n' + 'Completed tasks:\n  (use "will clean" to move long completed to history)' + '\n'
+    for task_dict in tasks_done:
+      template = template+ '\n\t'+Color.purple + task_dict['id'] + Color.end + '\t' + task_dict['status'] + '\t' + ' ' + task_dict['title']
+    template = template+'\n\nCompleted '+str( len( tasks_done) ) + ' of ' + str( total +1 )
+    contents = template.format( **status_dict )
+    #template = 
+    #template = 'In directory {path}\nIncompleted tasks:\n  (use "will set <status> <task...>" to mark task as done)\n'
+    print contents
+  
+  def get_tasks_with_status( self, statusses ):
+    if type(statusses) == str:
+      statusses = [ statusses ]
+    tasks = self.get_tasks()
+    output = []
+    for task in tasks:
+      task_dict = self.parse_task( task )
+      if task_dict['status'] in statusses:
+        output.append( task )
+    return output
+
+  def grep( self, args ):
+    # searches the file contents and prints the results in a specified way.
+    # TODO make it regex not just a word
+    template = '{task} ' #TODO
+    word = args[0]
+    for task in  self.get_tasks():
+      lines = self.get_task_lines( task )
+      fulls = [] # full lines
+      for index, line in enumerate( lines ):
+        if not line.strip() == '':
+          fulls.append( str( index ) + ' ' + line )
+        else:
+          continue
+        if word in line:
+          fulls[-1] = Color.green + fulls[-1] + Color.end
+          task_dict = self.parse_task( task )
+          print( Color.red + task + ': ' + task_dict['title'] + Color.end )
+          trailing = 4
+          line_min = max( 0, len( fulls ) - trailing )
+          print '\n'.join( fulls[line_min:] )
+          break
+
+  def create( self, args ):
+    title = ' '.join( args )
+    task = self.create_task({
+      'title'       : title,
+      'tags'        : [],
+      'description' : '',
+      'status'      : 'Inactive'
+    })
+    self.edit_task( task )
+
+  def is_task( self, args ): #TODO
+    return True
+
+  def edit( self, args ):
+    for task in args:
+      if self.is_task( task ):
+        self.edit_task( task )
+
+  def edit_task( self, task ):
+    task_path = self.get_task_path( task )
+    print task_path
+    command = EDITOR+" "+task_path
+    os.system( command )
+    #termcolor.cprint( 'edited: ' + task + '\n', color='red', attrs=['bold'] )
+    self.view_task( task )
     sys.exit(0)
-  else:
-    sys.exit(1)
 
-def find_path( _path ):
-  print find_will( _path )
-  sys.exit(0)
+  def is_edited( task ):
+    #TODO
+    return True
 
-def find_paths( args ):
-  path = os.getcwd()
-  for root, dirs, files in os.walk(path):
-    for d in dirs:
-      if d == '.will':
-        print(os.path.join(root, d))
-  return 0
+  def view( self, args ):
+    tasks = args
+    for task in tasks:
+      self.view_task( task )
+    return True
 
-def find_will( _path=False ):
-  if _path:
-    path = _path
-  else:
-    path = os.getcwd()
-  while True:
-    will = path + '/.will'
-    if os.path.isdir( will ):
-      return will
-    path = os.path.abspath( os.path.join( path, os.pardir))
+  def ls( self, args ):
+    tasks = self.get_tasks()
+    for task in tasks:
+      if not task:
+        break
+      task_dict = self.parse_task( task )
+      print self.get_task_path( task )
 
-def get_tasks():
-  tasks = [];
-  path = find_will();
-  for (dirpath, dirnames, filenames) in os.walk( path ):
-    tasks = filenames;
-    break
-  for index, task in enumerate(tasks):
-    tasks[index] = path+'/'+task
-  return tasks;
-
-def list_tasks( keywords ):
-  rows = []
-  if keywords:
-    exit
-    tasks = find_tasks( keywords )
-  else:
-    tasks = get_tasks()
-  if not tasks:
-    print 'error: no matching tasks found'
-    return 0
-  for task in tasks:
-    lines = get_task_lines( task )
-    # cleanup the lines by removing empty strings. This removes empty lines
-    # after the file of empty files between title and description
-    index=0;
-    for line in lines:
-      if not line == '':
-        lines[index] = line;
-      index = index + 1
-    lines = lines[0:index]
-
-    task_identif = get_task_id          ( task )
-    task_subject = get_task_subject     ( lines )
-    task_categor = get_task_categories  ( lines )
-    task_descrip = get_task_description ( lines )
-    task_duratio = get_task_duration    ( lines )
-
-    #print task_identif+'\t'+task_subject+'\t'+task_categor+'\t'+task_descrip+'\t'+task_duratio
-    rows.append([ task_identif, task_subject, task_categor, task_descrip, task_duratio]);
-  rows.insert(0, [ 'task', 'subject', 'category', 'description', 'deadline' ] )
-  collumnize( rows, [4, 24, 12, 32, 15] ) #including the 2 spaces after each collumn
-  termcolor.cprint( '\n'+find_will(), color='red', attrs=['bold'] )
-  sys.exit(0);
-
-def get_task_id( file_name ):
-  return file_name.split('/')[-1][0:4]
-
-def collumnize( rows, widths ):
-  def length( string, length):
-    string_length = len ( str ( string ) )
-    if string_length >= length:
-      return string[0:length]
+  def init( self, args ):
+    if self.create_will_dir():
+      print( 'created .will in: '+self.path )
     else:
-      def spaces( amount ):
-        string=''
-        for i in range( 0, amount ):
-          string = string + ' '
-        return string
-      #print string_length - length
-      return string + spaces( length - string_length )
-  for i, row in enumerate(rows):
-    line = ''
-    for index, field in enumerate(row):
-      line = line + length( field, widths[index] ) + '  '
-    if ( i == 0 ):
-      termcolor.cprint( line, color='cyan', attrs=['bold'] )
+      sys.stderr.write('already initiated .will in '+self.path+'\n')
+
+  def usage( self, args ):
+    pass
+
+  def create_will_dir( self ):
+    path = self.get_will_path( )
+    hist_path = self.get_history_path( )
+    if not os.path.exists( path ):
+      os.makedirs( path )
+      os.makedirs( hist_path )
+      return path
     else:
-      print line
+      return False
 
-def get_task_title( lines ):
-  return lines[0].split('\t')[0]
+  def get_will_path( self ):
+    return self.path+'/.will'
 
-def get_task_date( lines ):
-  return lines[-1]
+  def find_will_path( self, path='' ):
+    # gives a string of the nearest .will directory that can be either in the
+    # current directory or in its parent directories
+    # # #
+    if path == '':
+      path = os.getcwd()
+    while True:
+      will = path + '/.will'
+      if os.path.isdir( will ):
+        return will
+      path = os.path.abspath( os.path.join( path, os.pardir))
 
-def get_task_duration( lines ):
-  line = lines[-1]
-  try:
-    due_date = int( datetime.datetime.strptime( line.split('\t')[0], '%d %b %Y').strftime('%s'));
-    cur_date = int( datetime.datetime.now().strftime('%s') );
-    if due_date > cur_date:
-      return duration( due_date - cur_date );
-    else:
-      return '-'+duration( cur_date - due_date )
-  except Exception, e:
-    return line
-
-def get_task_subject( lines ):
-  try:
-    return lines[0].split('\t')[0];
-  except Exception, e:
-    return ''
-
-def get_task_categories( lines ):
-  try:
-    string=''
-    categories = lines[0].split('\t')[1:]
-    sublen = 12 / len(categories)
-    for category in lines[0].split('\t')[1:]:
-      string=string+category[0:sublen].capitalize()+'';
-    return string
-  except Exception, e:
-    return '...'
-
-def get_task_description( lines ):
-  try:
-    return lines[2];
-  except Exception, e:
-    return ''
-
-def get_task_lines( task ):
-  lines = []
-  for line in get_task_contents( task ).split('\n'):
-    if not line == '':
-      lines.append( line )
-  return lines
-
-def duration(seconds, suffixes=['y','w','d','h','m','s'], add_s=False, separator=' '):
-  # the formatted time string to be returned
-  time = []
-  # the pieces of time to iterate over (days, hours, minutes, etc)
-  # - the first piece in each tuple is the suffix (d, h, w)
-  # - the second piece is the length in seconds (a day is 60s * 60m * 24h)
-  parts = [(suffixes[0], 60 * 60 * 24 * 7 * 52),
-  (suffixes[1], 60 * 60 * 24 * 7),
-  (suffixes[2], 60 * 60 * 24),
-  (suffixes[3], 60 * 60)
-  #(suffixes[4], 60)
-  #(suffixes[5], 1)
-  ]
-  # for each time piece, grab the value and remaining seconds, and add it to
-  # the time string
-  for suffix, length in parts:
-    value = seconds / length
-    if value > 0:
-      seconds = seconds % length
-      time.append('%s%s' % (str(value),
-      (suffix, (suffix, suffix + 's')[value > 1])[add_s]))
-    if seconds < 1:
+  def get_tasks( self ):
+    tasks = [];
+    for (dirpath, dirnames, filenames) in os.walk( self.path ):
+      tasks = filenames
       break
-  return separator.join(time)
+    for index, task in enumerate(tasks):
+      task_dict = self.parse_task( task )
+      tasks[index] =  task
+    return tasks;
 
-def export_tasks():
-  return 0 #TODO
+  def view_task( self,  task ):
+    #outputs to human readable format
+    task_dict = self.parse_task( task )
+    template = Color.red + '{id}' + Color.end + Color.bold + ' {title}' + Color.end + '{description}\n' + Color.cyan + '{status}\t' + Color.end + '{tags}'
+    template = self.get_config( 'view_template', template )
+    task_dict['tags'] = ' '.join(task_dict['tags'] )
+    print template.format( **task_dict )
 
-print main ( sys.argv );
+  def create_task( self, task_dict ):
+    task = self.get_new_task()
+    path = self.get_task_path( task )
+    task_dict['tags'] = '\n'.join( task_dict['tags'] + self.get_config( 'tags', '').split(', ') )
+    template = '{title}\n{tags}\n{description}\n{status}'
+    template = self.get_config( 'template_file', template )
+    contents = template.format( **task_dict )
+    self.write_task_to_file( task, contents )
+    return task
+
+  def clean( self, args ):
+    tasks = self.get_tasks()
+    for task in tasks:
+      task_dict = self.parse_task( task )
+      if not task_dict['status'] == 'Completed':
+        continue
+      task_path = self.get_task_path( task )
+      #week = 604800
+      #week = 10
+      #unix = time.time()
+      #mtime = os.path.getmtime( task_path )
+      #diff = unix - mtime
+      #if diff > week:
+      self.remove_task( task )
+
+  def history( self, args ):
+    try:
+      if type( args[0] ) == int:
+        print self.get_history( args[0] )
+        return True
+    except Exception, e:
+      print  self.get_history()
+      pass
+
+  def get_history( self, amount=10 ):
+    lines = self.get_history_log_lines()
+    return lines[0:amount]
+
+  def backup_task( self, task ):
+    #TODO when changes are made to file
+    unix = int( time.time() )
+    name = str( unix ) + '_' + task
+    task_path = self.get_task_path( task )
+    back_path = self.get_history_path( )
+    if not os.path.isdir( back_path ):
+      os.makedirs( back_path )
+    shutil.copy( task_path, back_path+name )
+
+  def get_history_log_path( self, past=10 ):
+    return self.get_history_path()+'log'
+
+  def get_history_path( self ):
+    return self.path+'/.history/'
+
+  def task_exists( self, task ):
+    task_path = self.get_task_path( task )
+    return os.path.isfile( task_path )
+
+  def write_task_to_file( self, task, contents ):
+    # check if file changes make the file different. If not then do not save and
+    # log the changes to the log
+    # # #
+    task_file = self.get_task_path( task )
+    comp_file = task_file+'~'
+    is_similar = False
+
+    if self.task_exists( task ):
+      with open( comp_file, 'w+' ) as f:
+        f.write( contents )
+      is_similar = filecmp.cmp( task_file, task_file+'~' )
+      os.remove( task_file+'~' )
+
+    if is_similar:
+      #TODO log command to both log and print
+      return False
+
+    with open( task_file, 'w+' ) as f:
+      f.write( contents )
+
+    self.backup_task( task )
+    return True
+
+  def get_new_task( self ):
+    tasks = self.get_tasks()
+    task = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in xrange(4)])
+    while task in tasks:
+      task = ''.join([random.choice(string.ascii_lowercase + string.digits) for n in xrange(4)])
+    return task
+
+  def get_task_path( self,  task ):
+    return self.path+'/'+task
+
+  def get_task_lines( self, task ):
+    task_path = self.get_task_path( task )
+    return self.get_file_lines( task_path )
+
+  def get_history_log_lines( self ):
+    log_file = self.get_history_log_path()
+    return self.get_file_lines( log_file )
+
+  def get_file_lines( self, file_path ):
+    try:
+      with open( file_path, 'r' ) as f:
+        return f.read().strip().split('\n')
+    except Exception, e:
+      sys.stderr.write('could not read: '+file_path+'\n')
+      return []
+
+  def parse_task( self, task ):
+    # consider making a TaskParser class
+    lines = self.get_task_lines( task )
+    if not lines:
+      return {
+        'title'       : "",
+        'status'      : "",
+        'tags'        : "",
+        'description' : "",
+        'id'          : str( task )
+      }
+
+    def get_title():
+      return lines[0]
+
+    def get_status():
+      return lines[-1]
+
+    def get_tags():
+      tags = []
+      for line in lines[1:]:
+        if line.strip() == '':
+          break
+        else:
+          tags.append( line )
+      return tags
+
+    def get_description():
+      first_line = 0
+      for index, line in enumerate(lines):
+        if line.strip() == '':
+          first_line = index
+          break
+      return '\n'.join( lines[first_line:-2] )
+
+    return {
+      'title'       : get_title(),
+      'status'      : get_status(),
+      'tags'        : get_tags(),
+      'description' : get_description(),
+      'id'          : task
+    }
+
+args = sys.argv
+
+length = len( args )
+
+if length == 1:
+  args.append( 'status' )
+  will = Will( args[1] )
+else:
+  first_char = args[1][0]
+  if first_char in string.uppercase:
+    args.insert( 1, 'create' )
+  will = Will( args[1] )
+
+if is_valid_dir( args[1] ):
+  args = args[1:]
+
+option = args[1]
+params = args[2:]
+sys.exit( will[option]( params ) )

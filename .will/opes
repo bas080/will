@@ -1,0 +1,24 @@
+Show for every status what the possible options are
+author bas080
+project will
+
+The status shows the tasks per status. Also show next to the amount the possible
+options to change the status of that task. Something like.
+
+  Inactive: 10 ( use "will ready|complete task..." )
+
+Think about a way to store the task and it's possible options. Need a table with
+this information.
+
+Something like
+
+def get_task_options( self, task ):
+  options = {
+    'Inactive' : [ "complete", "ready" ]
+    ...
+  }
+
+The items in the list are the command and not the statusses. Rconsider using the
+statusses and finding another way to get the command connected to that status.
+
+Inactive

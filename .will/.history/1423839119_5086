@@ -1,0 +1,8 @@
+Check if edits have been made
+must
+feature
+
+Check if an edit was made by looking if file is different after the editor
+closes. This is checked by comparing the file line by line.
+
+Completed

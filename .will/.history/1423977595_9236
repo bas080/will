@@ -1,0 +1,16 @@
+Add configuration options
+feature
+
+
+The .willrc is a configartion file that uses python syntax. It is loaded in
+every time the will command is run. If it does not compile correctly it will use
+the default will options.
+
+Options include:
+logTrue|False
+
+status_list[]
+
+date_format''
+
+Completed

@@ -1,0 +1,16 @@
+Prioritization of tasks
+author bas080
+project will
+
+> will priority Low|Medium|High
+
+Every priority has it's index
+Low	0
+Medium	1
+High	2
+Urgent	3
+
+Once priority is set, It shows the priority of the task (prefferably sortd) in
+the status view.
+
+Ready

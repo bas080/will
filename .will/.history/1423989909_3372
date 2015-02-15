@@ -1,0 +1,11 @@
+Author name and email
+
+Define contact information in a .willrc in either the .will folder or the home
+folder. If not defined in the .will folder it uses the .willrc in the home
+folder
+
+---
+
+Fixed by using tags. The tag determines who the author is.
+
+Completed
